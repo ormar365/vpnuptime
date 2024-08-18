@@ -2,9 +2,9 @@
 
 # Targets to monitor with custom display names
 $targets = @{
-    "OpenVPN Server" = "10.167.51.1"
-    "OpenVPN Lan" = "172.16.24.108"
-    "OpenVPN Tunnel" = "recently-altered.gl.at.ply.gg"
+    "OpenVPN Server" = ""
+    "OpenVPN Lan" = ""
+    "OpenVPN Tunnel" = ""
     "Internet" = "8.8.8.8"
 }
 
