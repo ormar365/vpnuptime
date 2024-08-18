@@ -1,53 +1,46 @@
+# VPN Uptime Monitor Script
+
+# Targets to monitor with custom display names
+$targets = @{
+    "OpenVPN Server" = "10.167.51.1"
+    "OpenVPN Lan" = "172.16.24.108"
+    "OpenVPN Tunnel" = "recently-altered.gl.at.ply.gg"
+    "Internet" = "8.8.8.8"
+}
+
+# Initialize uptime counters
+$uptimeCounters = @{}
+
+# Clear screen
+Clear-Host
+
+# Monitor loop
 while ($true) {
-     # Clear screen
-     Clear-Host
+    # Display target status
+    foreach ($target in $targets.GetEnumerator()) {
+        $displayName = $target.Name
+        $ipAddress = $target.Value
 
-     # Ping IP addresses sequentially
-     ping 10.167.51.1 -n 1 -w 100 | Out-Null
-     if ($?) {
-         $trueCounter1++
-         $currentUptime1++
-         $consecutiveFailures1 = 0
-         Write-Host "Uptime 1: $currentUptime1 seconds" -ForegroundColor Green
-         if ($currentUptime1 -gt $maxUptime1) {
-             $maxUptime1 = $currentUptime1
-             Write-Host "New max uptime 1: $maxUptime1 seconds" -ForegroundColor Cyan
-         }
-     } else {
-         $falseCounter1++
-         $currentUptime1 = 0
-         $consecutiveFailures1++
-         Write-Host "Connection 1 lost. Restarting..." -ForegroundColor Red
-         if ($consecutiveFailures1 -gt 5) {
-             Write-Host "WARNING: Consecutive failures detected ($consecutiveFailures1)" -ForegroundColor Yellow
-         }
-     }
+        # Initialize uptime counter if not set
+        if (!$uptimeCounters.ContainsKey($ipAddress)) {
+            $uptimeCounters[$ipAddress] = 0
+        }
 
-     ping 8.8.8.8 -n 1 -w 100 | Out-Null
-     if ($?) {
-         $trueCounter2++
-         $currentUptime2++
-         $consecutiveFailures2 = 0
-         Write-Host "Uptime 2: $currentUptime2 seconds" -ForegroundColor Green
-         if ($currentUptime2 -gt $maxUptime2) {
-             $maxUptime2 = $currentUptime2
-             Write-Host "New max uptime 2: $maxUptime2 seconds" -ForegroundColor Cyan
-         }
-     } else {
-         $falseCounter2++
-         $currentUptime2 = 0
-         $consecutiveFailures2++
-         Write-Host "Connection 2 lost. Restarting..." -ForegroundColor Red
-         if ($consecutiveFailures2 -gt 5) {
-             Write-Host "WARNING: Consecutive failures detected ($consecutiveFailures2)" -ForegroundColor Yellow
-         }
-     }
-
-     # Display stats on a separate line
-     Write-Host ""
-     Write-Host "Stats:"
-     Write-Host "IP 1 (10.167.51.1): True: $trueCounter1, False: $falseCounter1, Success Rate: $($trueCounter1 / ($trueCounter1 + $falseCounter1) * 100)%" -ForegroundColor Gray
-     Write-Host "IP 2 (8.8.8.8): True: $trueCounter2, False: $falseCounter2, Success Rate: $($trueCounter2 / ($trueCounter2 + $falseCounter2) * 100)%" -ForegroundColor Gray
-
-     Start-Sleep -s 1
+        $status = $(ping -n 1 -w 100 $ipAddress | Select-String "TTL")
+        if ($status -ne $null) {
+            $uptimeCounters[$ipAddress]++
+            Write-Host "${displayName}: $($uptimeCounters[$ipAddress]) " -NoNewline -ForegroundColor Green
+            Write-Host "Up"
+        } else {
+            $uptimeCounters[$ipAddress] = 0
+            Write-Host "${displayName}: " -NoNewline -ForegroundColor Red
+            Write-Host "Down"
+        }
+    }
+    
+    # Wait 1 second
+    Start-Sleep -s 1
+    
+    # Clear screen for next update
+    Clear-Host
 }
